@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 int badDimensions(Pnm_ppm image1, Pnm_ppm image2)
 {
     int heightDiff = (image1->height - image2->height);
-    int widthDiff = (image1->wdith - image2->width);
+    int widthDiff = (image1->width - image2->width);
 
     if (abs(heightDiff) > 1) {
         return 1;
