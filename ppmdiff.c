@@ -27,12 +27,12 @@ int main(int argc, char *argv[])
 
     /* Compare dimensions of two images */
     printf("Image 1 Dimensions - \n");
-    printf("Width: %d\n", image1.width);
-    printf("Height: %d\n", image1.height);
+    printf("Width: %d\n", image1->width);
+    printf("Height: %d\n", image1->height);
 
     printf("Image 2 Dimensions - \n");
-    printf("Width: %d\n", image2.width);
-    printf("Height: %d\n", image2.height);
+    printf("Width: %d\n", image2->width);
+    printf("Height: %d\n", image2->height);
     if (badDimensions(image1, image2)) {
         fprintf(stderr, "image dimensions are not similar\n");
         fpintf(stdout, "1.0\n");
