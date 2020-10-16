@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     printf("Height: %d\n", image2->height);
     if (badDimensions(image1, image2)) {
         fprintf(stderr, "image dimensions are not similar\n");
-        fpintf(stdout, "1.0\n");
+        fprintf(stdout, "1.0\n");
     }
 
     printf("images are not bad dimensions\n");
