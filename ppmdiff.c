@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     assert(argc == 3);
     FILE *fp1, *fp2;
     Pnm_ppm image1, image2;
-    // int col, row;
+    int col, row;
     (void)col;
     (void)row;
 
