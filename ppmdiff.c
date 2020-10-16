@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
     assert(methods);
 
     fp1 = fopen(argv[1], "rb");
-    image1 = pnm_ppmread(fp1, methods);
+    image1 = Pnm_ppmread(fp1, methods);
 
     fp2 = fopen(argv[2], "rb");
-    image2 = pnm_ppmread(fp2, methods);
+    image2 = Pnm_ppmread(fp2, methods);
 }
