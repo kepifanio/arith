@@ -13,6 +13,8 @@ int main(int argc, char *argv[])
     FILE *fp1, *fp2;
     Pnm_ppm image1, image2;
     // int col, row;
+    (void)col;
+    (void)row;
 
     A2Methods_T methods = uarray2_methods_plain;
     assert(methods);
