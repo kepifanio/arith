@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <a2methods.h>
+#include <a2plain.h>
 #include <pnm.h>
 
 int main(int argc, char *argv[])
