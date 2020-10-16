@@ -29,7 +29,7 @@ all: ppmdiff
 # a2test: a2test.o uarray2b.o uarray2.o a2plain.o
 # 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-ppmdiff: ppmdiff.o uarray2b.o uarray2.o
+ppmdiff: ppmdiff.o uarray2b.o uarray2.o a2methods.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 
