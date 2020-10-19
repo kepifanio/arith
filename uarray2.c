@@ -7,10 +7,10 @@
 #define T UArray2_T
 
 /*
- *  * Element (i, j) in the world of ideas maps to
- *   * rows[j][i] where the square brackets stand for access
- *    * to a Hanson UArray_T
- *     */
+ * Element (i, j) in the world of ideas maps to
+ * rows[j][i] where the square brackets stand for access
+ * to a Hanson UArray_T
+ */
 struct T {
         int width, height;
         int size;

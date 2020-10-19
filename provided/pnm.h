@@ -22,13 +22,13 @@ typedef struct Pnm_rgb {
 } *Pnm_rgb;
 
 /*
- * clients may read 'methods, but to mutate 'methods' or any
+ * clients may read 'methods, but to mutate 'methods' or any 
  * field of 'methods' is an UNCHECKED run-time error
  */
 typedef struct Pnm_ppm {
         unsigned width, height, denominator;
         A2Methods_UArray2 pixels;          /* 2D array with
-                                            * element type 'struct Pnm_rgb'
+                                            * element type 'struct Pnm_rgb' 
                                             */
         const struct A2Methods_T *methods; /* to operate on 'pixels' field */
 } *Pnm_ppm;
@@ -44,9 +44,9 @@ extern const Except_T Pnm_Badformat;
  */
 Pnm_ppm Pnm_ppmread(FILE *fp, A2Methods_T methods);
 
-/*
- * Write 'pixmap' to a file.  If 'pixmap' is empty, it's a checked
- * run-time error.
+/* 
+ * Write 'pixmap' to a file.  If 'pixmap' is empty, it's a checked 
+ * run-time error. 
  */
 void Pnm_ppmwrite(FILE *fp, Pnm_ppm pixmap);
 
