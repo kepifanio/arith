@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     width_and_height(image1, image2);
     pixels(image1, image2);
 
+    return 0;
 }
 
 void width_and_height(Pnm_ppm image1, Pnm_ppm image2)

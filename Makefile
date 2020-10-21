@@ -49,7 +49,7 @@ INCLUDES = $(shell echo *.h)
 
 ############### Rules ###############
 
-all: ppmdiff
+all: ppmdiff 40image
 
 
 ## Compile step (.c files -> .o files)
@@ -64,5 +64,9 @@ all: ppmdiff
 ppmdiff: ppmdiff.o a2plain.o uarray2.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
+40image: 40image.o compress40.o uarray2.o a2plain.o image.o testing.o rgb_cv_conversion.o
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+
 clean:
-	rm -f ppmdiff *.o
+	rm -f ppmdiff 40image *.o
