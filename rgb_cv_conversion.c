@@ -19,7 +19,7 @@ A2Methods_UArray2 rgb_to_cv(Pnm_ppm image,
 }
 
 /* This function is the apply function for the mapping process of
- *     converint from an array of Pnm_rgb's to an array of y_pb_pr
+ *     converting from an array of Pnm_rgb's to an array of y_pb_pr
  *     structs.
  */
 void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
@@ -38,7 +38,7 @@ void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
     float green = (float) rgb_pixel->green / denominator;
     float blue = (float) rgb_pixel->blue / denominator;
 
-    /* Calculate Y, Pb, and Pr values and store in struct */ 
+    /* Calculate Y, Pb, and Pr values and store in struct */
     cv_struct->Y = 0.299 * red + 0.587 * green + 0.114 * blue;
     cv_struct->Pb = - 0.168736 * red - 0.331264 * green + 0.5 * blue;
     cv_struct->Pr = 0.5 * red - 0.418688 * green - 0.081312 * blue;
