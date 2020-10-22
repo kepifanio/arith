@@ -10,6 +10,10 @@ typedef struct y_pb_pr {
     float Pr;
 } *y_pb_pr;
 
+typedef struct abcdPbPr {
+    
+}
+
 A2Methods_UArray2 rgb_to_cv(Pnm_ppm image,
       A2Methods_T methods, A2Methods_mapfun *map);
 

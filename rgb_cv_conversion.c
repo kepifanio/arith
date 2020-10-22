@@ -19,7 +19,7 @@ A2Methods_UArray2 rgb_to_cv(Pnm_ppm image,
 }
 
 /* This function is the apply function for the mapping process of
- *     converting from an array of Pnm_rgb's to an array of y_pb_pr
+ *     converint from an array of Pnm_rgb's to an array of y_pb_pr
  *     structs.
  */
 void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
@@ -45,4 +45,10 @@ void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
     *(y_pb_pr)elem = *cv_struct;
 
     free(cv_struct);
+}
+
+A2Methods_UArray2 cv_to_32bit(A2Methods_UArray2 cv_image, A2Methods_T methods,
+      A2Methods_mapfun *map)
+{
+    
 }
