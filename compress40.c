@@ -25,11 +25,16 @@ void compress40(FILE *fp)
     A2Methods_UArray2 cv_image = rgb_to_cv(image, methods, map);
     test_rgb_to_cv(image, cv_image);
 
-    
+    /* Convert from cv structs to quantized word */
+    A2Methods_UArray2 quantized_image = cv_to_word
+                        (cv_image, methods, map);
+
+    // test_bitpack(image, cv_image);
 
     /* Free memory */
     Pnm_ppmfree(&image);
     methods->free(&cv_image);
+    // methods->free(&quantized_image);
 }
 
 void decompress40(FILE *fp)
