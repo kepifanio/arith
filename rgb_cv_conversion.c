@@ -143,6 +143,10 @@ void range(float *value) {
     }
 }
 
+/* This function converts the array of word structs to an array
+ *     of the final codewords. The function declares a new UArray2,
+ *     passes it to the map function, and returns the initialized array.
+ */
 A2Methods_UArray2 word_to_codeword(A2Methods_UArray2 quantized_image,
     A2Methods_T methods, A2Methods_mapfun map)
 {
