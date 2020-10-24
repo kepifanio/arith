@@ -54,6 +54,36 @@ void test_rgb_to_cv(Pnm_ppm image, A2Methods_UArray2 cv_image)
     }
 }
 
+/* Sanity check: checks height and width of quantized_image
+ *     and the contents of its stored structs.
+ */
+void test_cv_to_word(A2Methods_UArray2 quantized_image,
+    A2Methods_T methods)
+{
+    printf("compressed image width: %d\n",
+        methods->width(quantized_image));
+    printf("compressed image height: %d\n",
+        methods->height(quantized_image));
+
+    abcdPbPr word_struct = methods->at(quantized_image, 5, 5);
+    int64_t a, b, c, d;
+    uint64_t Pb, Pr;
+    a = word_struct->a;
+    b = word_struct->b;
+    c = word_struct->c;
+    d = word_struct->d;
+    Pb = word_struct->Pb;
+    Pr = word_struct->Pr;
+
+    printf("a: %ld\n", a);
+    printf("b: %ld\n", b);
+    printf("c: %ld\n", c);
+    printf("d: %ld\n", d);
+    printf("Pb: %ld\n", Pb);
+    printf("Pr: %ld\n", Pr);
+
+}
+
 /* Test Bitpack.h */
 void test_bitpack(Pnm_ppm image, A2Methods_UArray2 cv_image) {
     /* word will pack a, b, c, d, Pb, and Pr */
@@ -77,7 +107,7 @@ void test_bitpack(Pnm_ppm image, A2Methods_UArray2 cv_image) {
 
     (void) Pb_4bit;
     (void) Pr_4bit;
-    (void) PbPr_width; 
+    (void) PbPr_width;
     (void) word;
     (void) abcd_width;
 }

@@ -5,6 +5,7 @@
 #include "a2plain.h"
 #include "arith40.h"
 #include "math.h"
+#include "bitpack.h"
 
 typedef struct y_pb_pr {
     float Y;
@@ -39,3 +40,9 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     void *elem, void *cl);
 
 void range(float *value);
+
+A2Methods_UArray2 word_to_codeword(A2Methods_UArray2 quantized_image,
+    A2Methods_T methods, A2Methods_mapfun map);
+
+    void apply_word_to_codeword(int i, int j,
+        A2Methods_UArray2 quantized_image, void *elem, void *cl);

@@ -19,22 +19,24 @@ void compress40(FILE *fp)
 
     /* Process fp and trim as necessary */
     Pnm_ppm image = readPPM(fp, methods);
-    testTrimming(image);
 
     /* Convert from rgb pixels to array of y_pb_pr structs */
     A2Methods_UArray2 cv_image = rgb_to_cv(image, methods, map);
-    test_rgb_to_cv(image, cv_image);
 
     /* Convert from cv structs to quantized word */
     A2Methods_UArray2 quantized_image = cv_to_word
                         (cv_image, methods, map);
 
-    // test_bitpack(image, cv_image);
+
+    /* Convert from words to codewords */
+    A2Methods_UArray2 codeword_image = word_to_codeword
+                        (quantized_image, methods, map);
 
     /* Free memory */
     Pnm_ppmfree(&image);
     methods->free(&cv_image);
-    // methods->free(&quantized_image);
+    methods->free(&quantized_image);
+    methods->free(&codeword_image);
 }
 
 void decompress40(FILE *fp)

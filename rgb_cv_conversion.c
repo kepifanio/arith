@@ -5,6 +5,8 @@
 
 #define A_COEF 511
 #define BCD_COEF 50
+#define ABCD_WIDTH 6
+#define PBPR_WIDTH 4
 
 /* This function converts the array of Pnm_rgb's to an array of
  *     y_pb_pr structs by declaring a new UArray2 and passing
@@ -44,17 +46,22 @@ void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
     cv_struct->Y = 0.299 * red + 0.587 * green + 0.114 * blue;
     cv_struct->Pb = - 0.168736 * red - 0.331264 * green + 0.5 * blue;
     cv_struct->Pr = 0.5 * red - 0.418688 * green - 0.081312 * blue;
-    *(y_pb_pr)elem = *cv_struct;
 
+    *(y_pb_pr)elem = *cv_struct;
     free(cv_struct);
 }
 
-
+/* This function converts the array of cv structs to an array of
+ *     half that height and width, containing structs of the
+ *     quantized a, b, c, d, Pb, and Pr values. The function
+ *     declares a new UArray2, passes it to the map function,
+ *     and returns the initialized array.
+ */
 A2Methods_UArray2 cv_to_word(A2Methods_UArray2 cv_image,
     A2Methods_T methods, A2Methods_mapfun map)
 {
     int newWidth = (methods->width(cv_image)) / 2;
-    int newHeight = (methods->width(cv_image)) / 2;
+    int newHeight = (methods->height(cv_image)) / 2;
 
     A2Methods_UArray2 quantized_image = methods->new
                     (newWidth, newHeight, sizeof(struct abcdPbPr));
@@ -63,12 +70,17 @@ A2Methods_UArray2 cv_to_word(A2Methods_UArray2 cv_image,
         malloc(sizeof(*quantize_closure));
     quantize_closure->array = cv_image;
     quantize_closure->methods = methods;
+
     map(quantized_image, apply_cv_to_word, quantize_closure);
 
     free(quantize_closure);
     return quantized_image;
 }
 
+/* This function is the apply function for the cv_to_word function
+ *     and executes all of the operations to calculate and store
+ *     the elements of the abcdPbPr structs.
+ */
 void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     void *elem, void *cl)
 {
@@ -77,10 +89,12 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     y_pb_pr cv1, cv2, cv3, cv4;
     int curr_col = i * 2;
     int curr_row = j * 2;
-    abcdPbPr word_struct = elem;
+    abcdPbPr word_struct = malloc(sizeof(struct abcdPbPr));
     float avgPb, avgPr, a_float, b_float, c_float, d_float;
+
     /* Get cv closures from 4 pixels */
-    cv1 = quantize_closure->methods->at(quantize_closure->array, curr_col, curr_row);
+    cv1 = quantize_closure->methods->at
+        (quantize_closure->array, curr_col, curr_row);
     cv2 = quantize_closure->methods->at
         (quantize_closure->array, curr_col + 1, curr_row);
     cv3 = quantize_closure->methods->at
@@ -110,12 +124,62 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     word_struct->b = (signed)(roundf(b_float * BCD_COEF));
     word_struct->c = (signed)(roundf(c_float * BCD_COEF));
     word_struct->d = (signed)(roundf(d_float * BCD_COEF));
+
+    *(abcdPbPr)elem = *word_struct;
+    free(word_struct);
 }
 
+/* This function ensures that the b, c, and d floats are within the
+ *     range -0.3 and 0.3. If the float value passed is less than
+ *     -0.3, value is set to -0.3. If the float value passed is
+ *     greater than 0.3, value is set to 0.3. This is part of the
+ *     quantization process.
+ */
 void range(float *value) {
     if (*value < -0.3) {
         *value = -0.3;
     } else if (*value > 0.3) {
         *value = 0.3;
     }
+}
+
+A2Methods_UArray2 word_to_codeword(A2Methods_UArray2 quantized_image,
+    A2Methods_T methods, A2Methods_mapfun map)
+{
+    int width = methods->width(quantized_image);
+    int height = methods->height(quantized_image);
+
+    A2Methods_UArray2 codeword_image = methods->new(width, height,
+                                                sizeof(uint64_t));
+
+    struct closure *codeword_cl = malloc(sizeof(*codeword_cl));
+    codeword_cl->array = codeword_image;
+    codeword_cl->methods = methods;
+
+    map(quantized_image, apply_word_to_codeword, codeword_cl);
+
+    free(codeword_cl);
+    return codeword_image;
+}
+
+void apply_word_to_codeword(int i, int j,
+    A2Methods_UArray2 quantized_image, void *elem, void *cl)
+{
+    (void) quantized_image;
+    struct closure *codeword_cl = cl;
+    abcdPbPr word_struct = elem;
+    uint64_t temp = 0;
+    temp = Bitpack_newu(temp, PBPR_WIDTH, 0, word_struct->Pr);
+    temp = Bitpack_newu(temp, PBPR_WIDTH, PBPR_WIDTH, word_struct->Pb);
+    temp = Bitpack_news(temp, ABCD_WIDTH, 2 * PBPR_WIDTH, word_struct->d);
+    temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + ABCD_WIDTH,
+                                                        word_struct->c);
+    temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + (2 * ABCD_WIDTH),
+                                                        word_struct->b);
+    // temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + (3 * ABCD_WIDTH),
+    //                                                     word_struct->a);
+
+    uint64_t *codeword = codeword_cl->methods->at
+                        (codeword_cl->array, i, j);
+    *codeword = temp;
 }

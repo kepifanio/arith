@@ -9,14 +9,12 @@ Except_T Bitpack_Overflow = { "Overflow packing bits" };
 
 uint64_t left_shiftu(uint64_t val, unsigned shift)
 {
-    assert(shift <= 64);
-
     if (shift == 64) {
         return 0;
     } else {
-        return val << shift;
+        uint64_t new_val = val << shift;
+        return new_val;
     }
-
 }
 
 uint64_t rightShift(uint64_t val, unsigned shift)
@@ -46,11 +44,9 @@ int64_t arithRight(int64_t val, unsigned shift)
 /* This function tests whether n can be represented in width bits. */
 bool Bitpack_fitsu(uint64_t n, unsigned width)
 {
-    assert(width <= 64);
-
-    // uint64_t maxInt = ~0;
-    //
-    // uint64_t maxVal = ~(leftShift(maxInt, width));
+    if (width >= 64) {
+        return true;
+    }
 
     uint64_t maxVal = left_shiftu(1, width);
 
@@ -63,28 +59,22 @@ bool Bitpack_fitsu(uint64_t n, unsigned width)
 
 bool Bitpack_fitss(int64_t n, unsigned width)
 {
-    (void) n;
-    (void) width;
-    // assert(width <= 64);
-    //
-    // printf("in fitss\n");
-    //
-    // uint64_t maxInt = ~0;
-    //
-    // int64_t maxVal = (int64_t) ~(left_shiftu(maxInt, width - 1));
-    //
-    // int64_t minVal = ~maxVal;
-    //
-    // printf("max val == %ld min val == %ld\n", maxVal, minVal);
-    //
-    // if (n <= maxVal && n >= minVal) {
-    //     return true;
-    // }
-    //
-    // else {
-    //     return false;
-    // }
-    return true;
+    if (width >= 64) {
+        return true;
+    }
+
+    if (width == 0) {
+        return false;
+    }
+
+    bool fits = false;
+    if (n >= 0) {
+        fits = Bitpack_fitsu(2 * n, width);
+    } else {
+        fits = Bitpack_fitsu((~(n-1)) * 2 - 1, width);
+    }
+
+    return fits;
 }
 
 uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
@@ -138,6 +128,7 @@ uint64_t Bitpack_newu(uint64_t word, unsigned width,
     /* Check if the given value fits in the given width */
     if (Bitpack_fitsu(value, width) != true) {
         RAISE(Bitpack_Overflow);
+        assert(0);
     }
 
     /* Make mask */
@@ -152,11 +143,28 @@ uint64_t Bitpack_newu(uint64_t word, unsigned width,
     return new_word;
 }
 
-uint64_t Bitpack_news(uint64_t word, unsigned width, unsigned lsb,  int64_t value)
+uint64_t Bitpack_news(uint64_t word, unsigned width, unsigned lsb,
+    int64_t value)
 {
-    (void)word;
-    (void)width;
-    (void)lsb;
-    (void)value;
-    return 0;
+    assert(width <= 64);
+    assert(width + lsb <= 64);
+
+    if (Bitpack_fitss(value, width) != true) {
+        RAISE(Bitpack_Overflow);
+        assert(0);
+    }
+
+    /* Make mask and transfer sign value */
+    uint64_t left = (left_shiftu(1, 64 - width - lsb)) - 1;
+    left = left_shiftu(left, width + lsb);
+    uint64_t right = (left_shiftu(1, lsb)) - 1;
+    uint64_t mask = left + right;
+    uint64_t new_value = value;
+    new_value = left_shiftu(value, 64 - width);
+    new_value = left_shiftu(value, 64 - width - lsb);
+
+    /* Get word */
+    uint64_t new_word = word & mask;
+    new_word = new_word | new_value;
+    return new_word;
 }
