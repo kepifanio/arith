@@ -51,8 +51,6 @@ bool Bitpack_fitsu(uint64_t n, unsigned width)
 
     maxVal = ~(leftShift(maxVal, width));
 
-    printf("maxVal == %ld\n", maxVal);
-
     return (n <= maxVal);
 }
 
@@ -60,15 +58,11 @@ bool Bitpack_fitss(int64_t n, unsigned width)
 {
     assert(width <= 64);
 
-    printf("in fitss\n");
-
     uint64_t maxInt = ~0;
 
     int64_t maxVal = (int64_t) ~(leftShift(maxInt, width - 1));
 
     int64_t minVal = ~maxVal;
-
-    printf("max val == %ld min val == %ld\n", maxVal, minVal);
 
     return (n <= maxVal && n >= minVal);
 }
@@ -130,7 +124,7 @@ uint64_t Bitpack_news(uint64_t word, unsigned width, unsigned lsb,  int64_t valu
     assert(width + lsb <= 64);
 
     /* Check if the given value fits in the given width */
-    if (!Bitpack_fitsu(value, width)) {
+    if (!Bitpack_fitss(value, width)) {
         RAISE(Bitpack_Overflow);
     }
 

@@ -14,12 +14,12 @@ typedef struct y_pb_pr {
 } *y_pb_pr;
 
 typedef struct abcdPbPr {
-    int64_t a;
-    int64_t b;
-    int64_t c;
-    int64_t d;
-    uint64_t Pb;
-    uint64_t Pr;
+    unsigned a;
+    signed b;
+    signed c;
+    signed d;
+    unsigned Pb;
+    unsigned Pr;
 } *abcdPbPr;
 
 struct closure {

@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "rgb_cv_conversion.h"
+#include "compression_conversion.h"
 #include <assert.h>
 
 #define A_COEF 511
 #define BCD_COEF 50
-#define ABCD_WIDTH 6
+#define A_WIDTH 9
+#define BCD_WIDTH 5
 #define PBPR_WIDTH 4
 
 /* This function converts the array of Pnm_rgb's to an array of
@@ -118,8 +119,8 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     range(&d_float);
 
     /* Store quantized values in struct */
-    word_struct->Pb = (uint64_t)(Arith40_index_of_chroma(avgPb));
-    word_struct->Pr = (uint64_t)(Arith40_index_of_chroma(avgPr));
+    word_struct->Pb = (unsigned)(Arith40_index_of_chroma(avgPb));
+    word_struct->Pr = (unsigned)(Arith40_index_of_chroma(avgPr));
     word_struct->a = (unsigned)(roundf(a_float * A_COEF));
     word_struct->b = (signed)(roundf(b_float * BCD_COEF));
     word_struct->c = (signed)(roundf(c_float * BCD_COEF));
@@ -166,6 +167,10 @@ A2Methods_UArray2 word_to_codeword(A2Methods_UArray2 quantized_image,
     return codeword_image;
 }
 
+/* This function is the apply function for the word_to_codeword function
+ *     and calls the bitpack interface in order to create a uint64_t
+ *     with the elements from a abcdPbPr struct packed in.
+ */
 void apply_word_to_codeword(int i, int j,
     A2Methods_UArray2 quantized_image, void *elem, void *cl)
 {
@@ -175,13 +180,13 @@ void apply_word_to_codeword(int i, int j,
     uint64_t temp = 0;
     temp = Bitpack_newu(temp, PBPR_WIDTH, 0, word_struct->Pr);
     temp = Bitpack_newu(temp, PBPR_WIDTH, PBPR_WIDTH, word_struct->Pb);
-    temp = Bitpack_news(temp, ABCD_WIDTH, 2 * PBPR_WIDTH, word_struct->d);
-    temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + ABCD_WIDTH,
+    temp = Bitpack_news(temp, BCD_WIDTH, 2 * PBPR_WIDTH, word_struct->d);
+    temp = Bitpack_news(temp, BCD_WIDTH, (2 * PBPR_WIDTH) + BCD_WIDTH,
                                                         word_struct->c);
-    temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + (2 * ABCD_WIDTH),
+    temp = Bitpack_news(temp, BCD_WIDTH, (2 * PBPR_WIDTH) + (2 * BCD_WIDTH),
                                                         word_struct->b);
-    // temp = Bitpack_news(temp, ABCD_WIDTH, (2 * PBPR_WIDTH) + (3 * ABCD_WIDTH),
-    //                                                     word_struct->a);
+    temp = Bitpack_newu(temp, A_WIDTH, (2 * PBPR_WIDTH) + (3 * BCD_WIDTH),
+                                                        word_struct->a);
 
     uint64_t *codeword = codeword_cl->methods->at
                         (codeword_cl->array, i, j);

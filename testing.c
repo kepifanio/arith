@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "testing.h"
-#include "rgb_cv_conversion.h"
+#include "compression_conversion.h"
 #include <stdbool.h>
 #include "arith40.h"
 

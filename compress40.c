@@ -5,9 +5,9 @@
 #include "a2methods.h"
 #include "a2plain.h"
 #include "assert.h"
-#include "image.h"
+#include "input_output.h"
 #include "testing.h"
-#include "rgb_cv_conversion.h"
+#include "compression_conversion.h"
 
 void compress40(FILE *fp)
 {
@@ -27,10 +27,12 @@ void compress40(FILE *fp)
     A2Methods_UArray2 quantized_image = cv_to_word
                         (cv_image, methods, map);
 
-
     /* Convert from words to codewords */
     A2Methods_UArray2 codeword_image = word_to_codeword
                         (quantized_image, methods, map);
+
+    /* Print compressed image to standard output */
+    printCompressed(codeword_image, methods);
 
     /* Free memory */
     Pnm_ppmfree(&image);
@@ -41,6 +43,14 @@ void compress40(FILE *fp)
 
 void decompress40(FILE *fp)
 {
-    printf("in decompress\n");
-    (void) fp;
+    /* Create UArray2 and set default mapping function */
+    A2Methods_T methods = uarray2_methods_plain;
+    assert(methods);
+    A2Methods_mapfun *map = methods->map_default;
+    assert(map);
+
+    /* Read compressed image file and store codewords */
+    A2Methods_UArray2 codeword_image = readCompressed(fp, methods);
+
+    (void) codeword_image; 
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "image.h"
+#include "input_output.h"
 #include <stdbool.h>
 
 /*
@@ -50,4 +50,42 @@ Pnm_ppm readPPM(FILE *input, A2Methods_T methods)
     methods->free(&(image->pixels));
     image->pixels = new_image;
     return image;
+}
+
+void printCompressed(A2Methods_UArray2 codeword_image, A2Methods_T methods)
+{
+    int width = methods->width(codeword_image);
+    int height = methods->height(codeword_image);
+
+    printf("COMP40 Compressed image format 2\n%u %u", width * 2, height * 2);
+    printf("\n");
+
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
+            uint64_t word = *(uint64_t *) methods->at
+                            (codeword_image, col, row);
+             for (int i = 4; i > 0; i--) {
+                 char byte = (char) Bitpack_getu(word, 8, 8 * i);
+                 putchar(byte);
+             }
+        }
+    }
+}
+
+A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods)
+{
+
+    unsigned width, height;
+    int header = fscanf(input, "COMP40 Compressed image format 2\n%u %u",
+                                                    &width, &height);
+    assert(header == 2);
+    int c_in = getc(input);
+    assert(c_in == '\n');
+
+    A2Methods_UArray2 codeword_image = methods->new(width/2, height/2,
+                                                    sizeof(uint64_t));
+
+
+    return codeword_image;
+
 }
