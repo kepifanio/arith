@@ -21,22 +21,36 @@ void compress40(FILE *fp)
     Pnm_ppm image = readPPM(fp, methods);
 
     /* Convert from rgb pixels to array of y_pb_pr structs */
-    A2Methods_UArray2 cv_image = rgb_to_cv(image, methods, map);
+    //A2Methods_UArray2 cv_image = rgb_to_cv(image, methods, map);
 
     /* Convert from cv structs to quantized word */
-    A2Methods_UArray2 quantized_image = cv_to_word
-                        (cv_image, methods, map);
+    //A2Methods_UArray2 quantized_image = cv_to_word
+                        //(cv_image, methods, map);
 
 
     /* Convert from words to codewords */
-    A2Methods_UArray2 codeword_image = word_to_codeword
-                        (quantized_image, methods, map);
+    //A2Methods_UArray2 codeword_image = word_to_codeword
+                        //(quantized_image, methods, map);
+
+
+    printf("testing area!\n");
+
+    // uint64_t n = -3;
+    // unsigned width = 3;
+    //
+    // if(Bitpack_fitsu(n, width)) { printf("fitsu is working\n"); }
+    //
+    // if(Bitpack_fitss(n, width)) { printf("fitss is working\n"); }
+
+    uint64_t test = Bitpack_gets(0x3f4, 6, 2);
+
+    printf("test == %ld\n", test);
 
     /* Free memory */
     Pnm_ppmfree(&image);
-    methods->free(&cv_image);
-    methods->free(&quantized_image);
-    methods->free(&codeword_image);
+    // methods->free(&cv_image);
+    // methods->free(&quantized_image);
+    // methods->free(&codeword_image);
 }
 
 void decompress40(FILE *fp)
