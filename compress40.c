@@ -43,22 +43,22 @@ void compress40(FILE *fp)
 
 void decompress40(FILE *fp)
 {
-    struct Pnm_ppm image;
     A2Methods_T methods = uarray2_methods_plain;
     assert(methods);
     A2Methods_mapfun *map = methods->map_default;
     assert(map);
 
     /* Create ppm for image and populate array of codewords */
-    image = createPPM(fp, methods);
-    A2Methods_UArray2 codewords = readCompressed
-                (fp, methods, image.width, image.height);
+    A2Methods_UArray2 codewords = readBinary(fp, map, methods);
 
-    /* Convert array of codewords to array of cv structs */
-    A2Methods_UArray2 cv_array = codewords_to_cv(codewords, &image,
-                                                    methods, map);
+    A2Methods_UArray2 word_array = codewords_to_words(codewords, map, methods);
 
+    A2Methods_UArray2 cv_array = words_to_cv(word_array, map, methods);
+
+    // Pnm_ppm rgb_image = cv_to_rgb(cv_array, map, methods);
 
     methods->free(&codewords);
+    methods->free(&word_array);
     methods->free(&cv_array);
+    // Pnm_ppmfree(&rgb_image);
 }

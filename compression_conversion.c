@@ -8,6 +8,7 @@
 #define A_WIDTH 9
 #define BCD_WIDTH 5
 #define PBPR_WIDTH 4
+#define BCD_RANGE 0.3
 
 /* This function converts the array of Pnm_rgb's to an array of
  *     y_pb_pr structs by declaring a new UArray2 and passing
@@ -198,23 +199,66 @@ void apply_word_to_codeword(int i, int j,
 /* -------------------- Decompression Functions ----------------------*/
 /* -------------------------------------------------------------------*/
 
-A2Methods_UArray2 codewords_to_cv(A2Methods_UArray2 codewords,
-    Pnm_ppm image, A2Methods_T methods, A2Methods_mapfun map)
+A2Methods_UArray2 codewords_to_words(A2Methods_UArray2 codewords,
+    A2Methods_mapfun map, A2Methods_T methods)
 {
-    A2Methods_UArray2 cv_array = methods->new(image->width, image->height,
-    sizeof(struct y_pb_pr));
+
+    int width = methods->width(codewords);
+    int height = methods->height(codewords);
+    A2Methods_UArray2 cv_array = methods->new(width, height,
+    sizeof(struct abcdPbPr));
 
     struct closure *unpack_cl = malloc(sizeof(*unpack_cl));
     unpack_cl->methods = methods;
     unpack_cl->array = cv_array;
 
-    map(codewords, apply_codewords_to_cv, unpack_cl);
+    map(codewords, apply_codewords_to_words, unpack_cl);
 
     free(unpack_cl);
     return cv_array;
 }
 
-void apply_codewords_to_cv(int i, int j, A2Methods_UArray2 array,
+void apply_codewords_to_words(int i, int j, A2Methods_UArray2 array,
+    void *elem, void *cl)
+{
+    (void) array;
+    struct closure *unpack_cl = cl;
+    uint64_t codeword = *((uint64_t*)elem);
+    abcdPbPr word_struct = unpack_cl->methods->at(unpack_cl->array, i, j);
+
+    word_struct->a = Bitpack_getu(codeword, A_WIDTH, (3 * BCD_WIDTH)
+                                                + (2 * PBPR_WIDTH));
+    word_struct->b = Bitpack_gets(codeword, BCD_WIDTH, (2 * BCD_WIDTH)
+                                                 + (2 * PBPR_WIDTH));
+    word_struct->c = Bitpack_gets(codeword, BCD_WIDTH, BCD_WIDTH +
+                                                2 * PBPR_WIDTH);
+    word_struct->d = Bitpack_gets(codeword, BCD_WIDTH, 2 * PBPR_WIDTH);
+    word_struct->Pb = Bitpack_getu(codeword, PBPR_WIDTH, PBPR_WIDTH);
+    word_struct->Pr = Bitpack_getu(codeword, PBPR_WIDTH, 0);
+
+}
+
+A2Methods_UArray2 words_to_cv(A2Methods_UArray2 words_array,
+    A2Methods_mapfun *map, A2Methods_T methods)
+{
+    int width = (methods->width(words_array)) * 2;
+    int height = (methods->height(words_array)) * 2;
+    A2Methods_UArray2 cv_array = methods->new(width, height,
+                                    sizeof(struct y_pb_pr));
+
+    struct closure *cv_closure = malloc(sizeof(*cv_closure));
+    cv_closure->methods = methods;
+    cv_closure->array = cv_array;
+
+    map(words_array, apply_words_to_cv, cv_closure);
+
+    free(cv_closure);
+    return cv_array;
+
+}
+
+
+void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
 {
     (void) array;
@@ -238,7 +282,7 @@ void apply_codewords_to_cv(int i, int j, A2Methods_UArray2 array,
     cv3->Pb = avgPb;
     cv4->Pb = avgPb;
 
-    /* Calculate and set average Pr values */
+    // /* Calculate and set average Pr values */
     avgPr = Arith40_chroma_of_index(word_struct->Pr);
     cv1->Pr = avgPr;
     cv2->Pr = avgPr;
@@ -247,9 +291,9 @@ void apply_codewords_to_cv(int i, int j, A2Methods_UArray2 array,
 
     /* Convert a, b, c, d values */
     a = (float)(word_struct->a / A_COEF);
-    b = (float)(word_struct->b / BCD_COEF);
-    c = (float)(word_struct->c / BCD_COEF);
-    d = (float)(word_struct->d / BCD_COEF);
+    b = (word_struct->b / BCD_COEF);
+    c = (word_struct->c / BCD_COEF);
+    d = (word_struct->d / BCD_COEF);
 
     /* Convert y values for each cv struct */
     cv1->Y = decompressRange(a - b - c + d);
@@ -261,9 +305,15 @@ void apply_codewords_to_cv(int i, int j, A2Methods_UArray2 array,
 float decompressRange(float value)
 {
     if (value < 0) {
-        value = 0.0;
+        return 0.0;
     } else if (value > 1) {
-        value = 1.0;
+        return 1.0;
     }
     return value;
 }
+// 
+// Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
+//     A2Methods_mapfun *map, A2Methods_T methods)
+// {
+//
+// }

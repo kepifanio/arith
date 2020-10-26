@@ -12,7 +12,13 @@ extern Pnm_ppm readPPM(FILE *input, A2Methods_T methods);
 void printCompressed(A2Methods_UArray2 codeword_image,
     A2Methods_T methods);
 
-struct Pnm_ppm createPPM(FILE *input, A2Methods_T methods);
+// struct Pnm_ppm createPPM(FILE *input, A2Methods_T methods);
+//
+// A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods,
+//     int width, int height);
 
-A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods,
-    int width, int height);
+void applyRead(int i, int j, A2Methods_UArray2 array,
+    void *elem, void *cl);
+
+A2Methods_UArray2 readBinary(FILE *input, A2Methods_mapfun *map,
+    A2Methods_T methods);
