@@ -12,4 +12,7 @@ extern Pnm_ppm readPPM(FILE *input, A2Methods_T methods);
 void printCompressed(A2Methods_UArray2 codeword_image,
     A2Methods_T methods);
 
-A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods);
+struct Pnm_ppm createPPM(FILE *input, A2Methods_T methods);
+
+A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods,
+    int width, int height);

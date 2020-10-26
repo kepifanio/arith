@@ -104,8 +104,8 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
         (quantize_closure->array, curr_col + 1, curr_row + 1);
 
     /* Convert Pb and Pr values */
-    avgPb = ((cv1->Pb) + (cv2->Pb) + (cv3->Pb) + (cv4->Pb)) / 4.0;
-    avgPr = ((cv1->Pr) + (cv2->Pr) + (cv3->Pr) + (cv4->Pr)) / 4.0;
+    avgPb = (cv1->Pb + cv2->Pb + cv3->Pb + cv4->Pb) / 4.0;
+    avgPr = (cv1->Pr + cv2->Pr + cv3->Pr + cv4->Pr) / 4.0;
 
     /* Convert a, b, c, d */
     a_float = (cv4->Y + cv3->Y + cv2->Y + cv1->Y) / 4.0;
@@ -114,17 +114,17 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     d_float = (cv4->Y - cv3->Y - cv2->Y + cv1->Y) / 4.0;
 
     /* b_float, c_float, and d_float must be between -0.3 and 0.3 */
-    range(&b_float);
-    range(&c_float);
-    range(&d_float);
+    compressRange(&b_float);
+    compressRange(&c_float);
+    compressRange(&d_float);
 
     /* Store quantized values in struct */
-    word_struct->Pb = (unsigned)(Arith40_index_of_chroma(avgPb));
-    word_struct->Pr = (unsigned)(Arith40_index_of_chroma(avgPr));
-    word_struct->a = (unsigned)(roundf(a_float * A_COEF));
-    word_struct->b = (signed)(roundf(b_float * BCD_COEF));
-    word_struct->c = (signed)(roundf(c_float * BCD_COEF));
-    word_struct->d = (signed)(roundf(d_float * BCD_COEF));
+    word_struct->Pb = (uint64_t)(Arith40_index_of_chroma(avgPb));
+    word_struct->Pr = (uint64_t)(Arith40_index_of_chroma(avgPr));
+    word_struct->a = (roundf(a_float * A_COEF));
+    word_struct->b = (roundf(b_float * BCD_COEF));
+    word_struct->c = (roundf(c_float * BCD_COEF));
+    word_struct->d = (roundf(d_float * BCD_COEF));
 
     *(abcdPbPr)elem = *word_struct;
     free(word_struct);
@@ -136,7 +136,7 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
  *     greater than 0.3, value is set to 0.3. This is part of the
  *     quantization process.
  */
-void range(float *value) {
+void compressRange(float *value) {
     if (*value < -0.3) {
         *value = -0.3;
     } else if (*value > 0.3) {
@@ -191,4 +191,79 @@ void apply_word_to_codeword(int i, int j,
     uint64_t *codeword = codeword_cl->methods->at
                         (codeword_cl->array, i, j);
     *codeword = temp;
+}
+
+
+/* -------------------------------------------------------------------*/
+/* -------------------- Decompression Functions ----------------------*/
+/* -------------------------------------------------------------------*/
+
+A2Methods_UArray2 codewords_to_cv(A2Methods_UArray2 codewords,
+    Pnm_ppm image, A2Methods_T methods, A2Methods_mapfun map)
+{
+    A2Methods_UArray2 cv_array = methods->new(image->width, image->height,
+    sizeof(struct y_pb_pr));
+
+    struct closure *unpack_cl = malloc(sizeof(*unpack_cl));
+    unpack_cl->methods = methods;
+    unpack_cl->array = cv_array;
+
+    map(codewords, apply_codewords_to_cv, unpack_cl);
+
+    free(unpack_cl);
+    return cv_array;
+}
+
+void apply_codewords_to_cv(int i, int j, A2Methods_UArray2 array,
+    void *elem, void *cl)
+{
+    (void) array;
+    int col = i * 2;
+    int row = j * 2;
+    struct closure *unpack_cl = cl;
+    abcdPbPr word_struct = elem;
+    y_pb_pr cv1, cv2, cv3, cv4;
+    float avgPb, avgPr, a, b, c, d;
+
+    /* Set cv struct pointers to indices of cv_array */
+    cv1 = unpack_cl->methods->at(unpack_cl->array, col, row);
+    cv2 = unpack_cl->methods->at(unpack_cl->array, col + 1, row);
+    cv3 = unpack_cl->methods->at(unpack_cl->array, col, row + 1);
+    cv4 = unpack_cl->methods->at(unpack_cl->array, col + 1, row + 1);
+
+    /* Calculate and set average Pb values */
+    avgPb = Arith40_chroma_of_index(word_struct->Pb);
+    cv1->Pb = avgPb;
+    cv2->Pb = avgPb;
+    cv3->Pb = avgPb;
+    cv4->Pb = avgPb;
+
+    /* Calculate and set average Pr values */
+    avgPr = Arith40_chroma_of_index(word_struct->Pr);
+    cv1->Pr = avgPr;
+    cv2->Pr = avgPr;
+    cv3->Pr = avgPr;
+    cv4->Pr = avgPr;
+
+    /* Convert a, b, c, d values */
+    a = (float)(word_struct->a / A_COEF);
+    b = (float)(word_struct->b / BCD_COEF);
+    c = (float)(word_struct->c / BCD_COEF);
+    d = (float)(word_struct->d / BCD_COEF);
+
+    /* Convert y values for each cv struct */
+    cv1->Y = decompressRange(a - b - c + d);
+    cv2->Y = decompressRange(a - b + c - d);
+    cv3->Y = decompressRange(a + b - c - d);
+    cv4->Y = decompressRange(a + b + c + d);
+}
+
+float decompressRange(float value)
+{
+    if (value < 0) {
+        value = 0.0;
+    } else if (value > 1) {
+        value = 1.0;
+    }
+    return value;
 }

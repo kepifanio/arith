@@ -64,7 +64,7 @@ void printCompressed(A2Methods_UArray2 codeword_image, A2Methods_T methods)
         for (int col = 0; col < width; col++) {
             uint64_t word = *(uint64_t *) methods->at
                             (codeword_image, col, row);
-             for (int i = 4; i > 0; i--) {
+             for (int i = 3; i >= 0; i--) {
                  char byte = (char) Bitpack_getu(word, 8, 8 * i);
                  putchar(byte);
              }
@@ -72,9 +72,8 @@ void printCompressed(A2Methods_UArray2 codeword_image, A2Methods_T methods)
     }
 }
 
-A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods)
+struct Pnm_ppm createPPM(FILE *input, A2Methods_T methods)
 {
-
     unsigned width, height;
     int header = fscanf(input, "COMP40 Compressed image format 2\n%u %u",
                                                     &width, &height);
@@ -82,10 +81,31 @@ A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods)
     int c_in = getc(input);
     assert(c_in == '\n');
 
-    A2Methods_UArray2 codeword_image = methods->new(width/2, height/2,
-                                                    sizeof(uint64_t));
+    struct Pnm_ppm pixmap = { .width = width, .height = height
+                            , .denominator = 255, .pixels = NULL
+                            , .methods = methods
+                            };
 
+    return pixmap;
+}
 
-    return codeword_image;
+A2Methods_UArray2 readCompressed(FILE *input, A2Methods_T methods,
+    int width, int height)
+{
 
+    A2Methods_UArray2 codewords = methods->new(width / 2, height / 2,
+                                            sizeof(uint64_t));
+
+    for (int row = 0; row < height / 2; row++) {
+        for (int col = 0; col < width / 2; col++) {
+            uint64_t codeword = 0;
+            for (int i = 3; i >= 0; i--) {
+                uint64_t byte = getc(input);
+                codeword = Bitpack_newu(codeword, 8, (8 * i), byte);
+            }
+            *(uint64_t*)methods->at(codewords, col, row) = codeword;
+        }
+    }
+
+    return codewords;
 }

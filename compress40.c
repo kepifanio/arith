@@ -43,14 +43,22 @@ void compress40(FILE *fp)
 
 void decompress40(FILE *fp)
 {
-    /* Create UArray2 and set default mapping function */
+    struct Pnm_ppm image;
     A2Methods_T methods = uarray2_methods_plain;
     assert(methods);
     A2Methods_mapfun *map = methods->map_default;
     assert(map);
 
-    /* Read compressed image file and store codewords */
-    A2Methods_UArray2 codeword_image = readCompressed(fp, methods);
+    /* Create ppm for image and populate array of codewords */
+    image = createPPM(fp, methods);
+    A2Methods_UArray2 codewords = readCompressed
+                (fp, methods, image.width, image.height);
 
-    (void) codeword_image; 
+    /* Convert array of codewords to array of cv structs */
+    A2Methods_UArray2 cv_array = codewords_to_cv(codewords, &image,
+                                                    methods, map);
+
+
+    methods->free(&codewords);
+    methods->free(&cv_array);
 }
