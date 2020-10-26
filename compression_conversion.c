@@ -3,6 +3,7 @@
 #include "compression_conversion.h"
 #include <assert.h>
 
+#define DENOM 255
 #define A_COEF 511
 #define BCD_COEF 50
 #define A_WIDTH 9
@@ -36,14 +37,13 @@ void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
 {
     (void) original;
     Pnm_ppm image = (Pnm_ppm) cl;
-    unsigned denominator = image->denominator;
     y_pb_pr cv_struct = malloc(sizeof(struct y_pb_pr));
     Pnm_rgb rgb_pixel = image->methods->at(image->pixels, i, j);
 
     /* Convert from rgb to floating point representation */
-    float red = (float) rgb_pixel->red / denominator;
-    float green = (float) rgb_pixel->green / denominator;
-    float blue = (float) rgb_pixel->blue / denominator;
+    float red = (float) rgb_pixel->red / (float)image->denominator;
+    float green = (float) rgb_pixel->green / (float)image->denominator;
+    float blue = (float) rgb_pixel->blue / (float)image->denominator;
 
     /* Calculate Y, Pb, and Pr values and store in struct */
     cv_struct->Y = 0.299 * red + 0.587 * green + 0.114 * blue;
@@ -106,8 +106,8 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
         (quantize_closure->array, curr_col + 1, curr_row + 1);
 
     /* Convert Pb and Pr values */
-    avgPb = (cv1->Pb + cv2->Pb + cv3->Pb + cv4->Pb) / 4.0;
-    avgPr = (cv1->Pr + cv2->Pr + cv3->Pr + cv4->Pr) / 4.0;
+    avgPb = (float)((cv1->Pb + cv2->Pb + cv3->Pb + cv4->Pb) / 4.0);
+    avgPr = (float)((cv1->Pr + cv2->Pr + cv3->Pr + cv4->Pr) / 4.0);
 
     /* Convert a, b, c, d */
     a_float = (cv4->Y + cv3->Y + cv2->Y + cv1->Y) / 4.0;
@@ -116,17 +116,18 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     d_float = (cv4->Y - cv3->Y - cv2->Y + cv1->Y) / 4.0;
 
     /* b_float, c_float, and d_float must be between -0.3 and 0.3 */
-    compressRange(&b_float);
-    compressRange(&c_float);
-    compressRange(&d_float);
+
+    b_float = compressRange(b_float);
+    c_float = compressRange(c_float);
+    d_float = compressRange(d_float);
 
     /* Store quantized values in struct */
-    word_struct->Pb = (uint64_t)(Arith40_index_of_chroma(avgPb));
-    word_struct->Pr = (uint64_t)(Arith40_index_of_chroma(avgPr));
-    word_struct->a = (roundf(a_float * A_COEF));
-    word_struct->b = (roundf(b_float * BCD_COEF));
-    word_struct->c = (roundf(c_float * BCD_COEF));
-    word_struct->d = (roundf(d_float * BCD_COEF));
+    word_struct->Pb = (Arith40_index_of_chroma(avgPb));
+    word_struct->Pr = (Arith40_index_of_chroma(avgPr));
+    word_struct->a = (unsigned)(roundf(a_float * A_COEF));
+    word_struct->b = (signed)(roundf(b_float * BCD_COEF));
+    word_struct->c = (signed)(roundf(c_float * BCD_COEF));
+    word_struct->d = (signed)(roundf(d_float * BCD_COEF));
 
     *(abcdPbPr)elem = *word_struct;
     free(word_struct);
@@ -138,12 +139,13 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
  *     greater than 0.3, value is set to 0.3. This is part of the
  *     quantization process.
  */
-void compressRange(float *value) {
-    if (*value < -0.3) {
-        *value = -0.3;
-    } else if (*value > 0.3) {
-        *value = 0.3;
+float compressRange(float value) {
+    if (value < -0.3) {
+        value = -0.3;
+    } else if (value > 0.3) {
+        value = 0.3;
     }
+    return value;
 }
 
 /* This function converts the array of word structs to an array
@@ -291,10 +293,10 @@ void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
     cv4->Pr = avgPr;
 
     /* Convert a, b, c, d values */
-    a = (float)(word_struct->a / A_COEF);
-    b = (word_struct->b / BCD_COEF);
-    c = (word_struct->c / BCD_COEF);
-    d = (word_struct->d / BCD_COEF);
+    a = ((float)word_struct->a / A_COEF);
+    b = ((float)word_struct->b / BCD_COEF);
+    c = ((float)word_struct->c / BCD_COEF);
+    d = ((float)word_struct->d / BCD_COEF);
 
     /* Convert y values for each cv struct */
     cv1->Y = decompressRange(a - b - c + d);
@@ -318,14 +320,13 @@ Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
 {
     int width = methods->width(cv_array);
     int height = methods->height(cv_array);
-    unsigned denominator = 255;
     Pnm_ppm image;
     NEW(image);
 
     /* Populate data members of Pnm_ppm */
     image->width = width;
     image->height = height;
-    image->denominator = denominator;
+    image->denominator = DENOM;
     image->methods = methods;
     image->pixels = methods->new(width, height, sizeof(struct Pnm_rgb));
 

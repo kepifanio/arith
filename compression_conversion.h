@@ -45,7 +45,7 @@ uint64_t float_to_int_a(float value, uint64_t coefficient);
 int64_t float_to_int_bcd(float value, uint64_t coefficient);
 
 
-void compressRange(float *value);
+float compressRange(float value);
 
 A2Methods_UArray2 word_to_codeword(A2Methods_UArray2 quantized_image,
     A2Methods_T methods, A2Methods_mapfun map);
@@ -76,4 +76,4 @@ Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
     A2Methods_mapfun *map, A2Methods_T methods);
 
 void apply_cv_to_rgb(int i, int j, A2Methods_UArray2 array,
-    void *elem, void *cl); 
+    void *elem, void *cl);
