@@ -55,10 +55,12 @@ void decompress40(FILE *fp)
 
     A2Methods_UArray2 cv_array = words_to_cv(word_array, map, methods);
 
-    // Pnm_ppm rgb_image = cv_to_rgb(cv_array, map, methods);
+    Pnm_ppm rgb_image = cv_to_rgb(cv_array, map, methods);
+
+    Pnm_ppmwrite(stdout, rgb_image); 
 
     methods->free(&codewords);
     methods->free(&word_array);
     methods->free(&cv_array);
-    // Pnm_ppmfree(&rgb_image);
+    Pnm_ppmfree(&rgb_image);
 }

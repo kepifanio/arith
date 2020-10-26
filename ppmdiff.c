@@ -7,10 +7,12 @@
 #include <a2methods.h>
 #include <stdbool.h>
 
+const float DENOMINATOR = 255.0;
+
 void width_and_height(Pnm_ppm image1, Pnm_ppm image2);
 void pixels(Pnm_ppm image1, Pnm_ppm image2);
-int comparePixs(Pnm_rgb pix1, Pnm_rgb pix2);
-
+int compareDimensions(int dimension1, int dimension2);
+float comparePixs(Pnm_rgb pix1, Pnm_rgb pix2);
 int main(int argc, char *argv[])
 {
     assert(argc == 3);
@@ -56,34 +58,41 @@ void width_and_height(Pnm_ppm image1, Pnm_ppm image2)
 
 void pixels(Pnm_ppm image1, Pnm_ppm image2)
 {
-    int sum = 0;
-    Pnm_rgb pix1, pix2;
-    unsigned int row, col;
-    for (row = 0; row < image1->height; row++) {
-        if (row >= image2->height) {
-            break;
-        }
-        for (col = 0; col < image1->width; col++) {
-            if (col >= image2->width) {
-                break;
-            }
-            pix1 = image1->methods->at(image1->pixels, col, row);
-            pix2 = image2->methods->at(image2->pixels, col, row);
+    int width = compareDimensions(image1->width, image2->width);
+    int height = compareDimensions(image1->height, image2->height);
+
+    float sum = 0;
+
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
+            Pnm_rgb pix1 = image1->methods->at(image1->pixels, col, row);
+            Pnm_rgb pix2 = image2->methods->at(image2->pixels, col, row);
             sum += comparePixs(pix1, pix2);
         }
     }
-    sum = sum / (3 * (row + 1) * (col + 1));
-    double E = sqrt(1.0 * sum / (3 * (row + 1) * (col + 1)));
-    printf("E: %.4f\n\n", E);
+
+    float E = sqrt(1.0 * sum/(3 * width * height));
+    fprintf(stdout, "%.4f\n", E);
 }
 
-int comparePixs(Pnm_rgb pix1, Pnm_rgb pix2)
+float comparePixs(Pnm_rgb pix1, Pnm_rgb pix2)
 {
-    int redDiff, greenDiff, blueDiff;
-    redDiff = pix1->red - pix2->red;
-    greenDiff = pix1->green - pix2->green;
-    blueDiff = pix1->blue - pix2->blue;
-    int sum = (redDiff * redDiff) + (greenDiff * greenDiff)
-        + (blueDiff * blueDiff);
-    return sum;
+    float red = ((int)(pix1->red) - (int)(pix2->red)) / DENOMINATOR;
+    float green = ((int)(pix1->green) - (int)(pix2->green)) / DENOMINATOR;
+    float blue = ((int)(pix1->blue) - (int)(pix2->blue)) / DENOMINATOR;
+
+    red = red * red;
+    green = green * green;
+    blue = blue * blue;
+
+    return red + green + blue;
+}
+
+int compareDimensions(int dimension1, int dimension2)
+{
+    if (dimension1 > dimension2) {
+        return dimension2;
+    } else {
+        return dimension1;
+    }
 }

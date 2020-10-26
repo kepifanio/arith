@@ -10,6 +10,7 @@
 #define PBPR_WIDTH 4
 #define BCD_RANGE 0.3
 
+
 /* This function converts the array of Pnm_rgb's to an array of
  *     y_pb_pr structs by declaring a new UArray2 and passing
  *     it to the mapping function. The function returns the new
@@ -311,9 +312,54 @@ float decompressRange(float value)
     }
     return value;
 }
-// 
-// Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
-//     A2Methods_mapfun *map, A2Methods_T methods)
-// {
-//
-// }
+
+Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
+    A2Methods_mapfun *map, A2Methods_T methods)
+{
+    int width = methods->width(cv_array);
+    int height = methods->height(cv_array);
+    unsigned denominator = 255;
+    Pnm_ppm image;
+    NEW(image);
+
+    /* Populate data members of Pnm_ppm */
+    image->width = width;
+    image->height = height;
+    image->denominator = denominator;
+    image->methods = methods;
+    image->pixels = methods->new(width, height, sizeof(struct Pnm_rgb));
+
+    /* Set closure */
+    struct closure *rgb_closure = malloc(sizeof(*rgb_closure));
+    rgb_closure->methods = methods;
+    rgb_closure->array = image->pixels;
+
+    /* Map and return rgb array */
+    map(cv_array, apply_cv_to_rgb, rgb_closure);
+
+    free(rgb_closure);
+    return image;
+}
+
+void apply_cv_to_rgb(int i, int j, A2Methods_UArray2 array,
+    void *elem, void *cl)
+{
+    (void) array;
+    struct closure *rgb_closure = cl;
+    y_pb_pr cv_struct = elem;
+    Pnm_rgb rgb_struct = rgb_closure->methods->at
+                     (rgb_closure->array, i, j);
+
+    /* Convert cv struct values to rgb values */
+    rgb_struct->red = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
+        + 0.0 * (cv_struct->Pb) + 1.402 * (cv_struct->Pr)));
+
+
+    rgb_struct->green = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
+        - 0.344136 * (cv_struct->Pb) - 0.714136 * (cv_struct->Pr)));
+
+
+    rgb_struct->blue = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
+        + 1.772 * (cv_struct->Pb) + 0.0 * (cv_struct->Pr)));
+
+}

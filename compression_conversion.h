@@ -6,6 +6,7 @@
 #include "arith40.h"
 #include "math.h"
 #include "bitpack.h"
+#include "mem.h"
 
 typedef struct y_pb_pr {
     float Y;
@@ -71,5 +72,8 @@ void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
 
 float decompressRange(float value);
 
-// Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
-//     A2Methods_mapfun *map, A2Methods_T methods);
+Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
+    A2Methods_mapfun *map, A2Methods_T methods);
+
+void apply_cv_to_rgb(int i, int j, A2Methods_UArray2 array,
+    void *elem, void *cl); 
