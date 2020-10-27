@@ -1,3 +1,22 @@
+/**************************************************************
+ *                      input_output.c
+ *
+ *    Assignment: locality
+ *    Authors: Noah Wright (nwrigh05) &
+               Katherine Epifanio (kepifa01)
+ *    Date: 10.26.20
+ *
+ *    Summary:
+ *
+ *          This file is responsible for reading in input
+ *          for both compression and decompression, and
+ *          printing out the converted image to stdout
+ *          for both compression and decompression.
+ *
+ *
+ **************************************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "input_output.h"
@@ -52,6 +71,10 @@ Pnm_ppm readPPM(FILE *input, A2Methods_T methods)
     return image;
 }
 
+/* This function takes in a compressed image (in the form of a
+ *     two-dimensional array of codewords) and prints the
+ *     contents to stdout
+ */
 void printCompressed(A2Methods_UArray2 codeword_image, A2Methods_T methods)
 {
     int width = methods->width(codeword_image);
@@ -72,6 +95,9 @@ void printCompressed(A2Methods_UArray2 codeword_image, A2Methods_T methods)
     }
 }
 
+/* This function reads in a binary image and and puts all the
+ *     codewords in an array.
+ */
 A2Methods_UArray2 readBinary(FILE *input, A2Methods_mapfun *map,
     A2Methods_T methods)
 {
@@ -90,6 +116,10 @@ A2Methods_UArray2 readBinary(FILE *input, A2Methods_mapfun *map,
 
 }
 
+/* This function is the apply function for the readBinary function.
+ *     It reads in the bytes and creates codewords to allocate the
+ *     2d array.
+ */
 void applyRead(int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
 {

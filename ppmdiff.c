@@ -32,6 +32,11 @@ int main(int argc, char *argv[])
     width_and_height(image1, image2);
     pixels(image1, image2);
 
+    fclose(fp1);
+    fclose(fp2);
+    Pnm_ppmfree(&image1);
+    Pnm_ppmfree(&image2);
+    
     return 0;
 }
 

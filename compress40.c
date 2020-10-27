@@ -7,7 +7,7 @@
 #include "assert.h"
 #include "input_output.h"
 #include "testing.h"
-#include "compression_conversion.h"
+#include "compress_decompress.h"
 
 void compress40(FILE *fp)
 {
@@ -57,7 +57,7 @@ void decompress40(FILE *fp)
 
     Pnm_ppm rgb_image = cv_to_rgb(cv_array, map, methods);
 
-    Pnm_ppmwrite(stdout, rgb_image); 
+    Pnm_ppmwrite(stdout, rgb_image);
 
     methods->free(&codewords);
     methods->free(&word_array);

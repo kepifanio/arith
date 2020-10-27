@@ -1,3 +1,23 @@
+/**************************************************************
+ *                      compress_decompress.c
+ *
+ *    Assignment: locality
+ *    Authors: Noah Wright (nwrigh05) &
+               Katherine Epifanio (kepifa01)
+ *    Date: 10.26.20
+ *
+ *    Summary:
+ *
+ *          This file contains the main driver code for
+ *          compression from ppm images to codeword arrays
+ *          and decompression from codeword arrays to ppm
+ *          images. Each step in the compression and
+ *          decompression process is divided into mapping
+ *          and respective apply functions.
+ *
+ *
+ **************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "compression_conversion.h"
@@ -11,6 +31,9 @@
 #define PBPR_WIDTH 4
 #define BCD_RANGE 0.3
 
+/* -------------------------------------------------------------------*/
+/* --------------------- Compression Functions -----------------------*/
+/* -------------------------------------------------------------------*/
 
 /* This function converts the array of Pnm_rgb's to an array of
  *     y_pb_pr structs by declaring a new UArray2 and passing
@@ -46,9 +69,13 @@ void apply_rgb_to_cv(int i, int j, A2Methods_UArray2 original,
     float blue = (float) rgb_pixel->blue / (float)image->denominator;
 
     /* Calculate Y, Pb, and Pr values and store in struct */
-    cv_struct->Y = 0.299 * red + 0.587 * green + 0.114 * blue;
-    cv_struct->Pb = - 0.168736 * red - 0.331264 * green + 0.5 * blue;
-    cv_struct->Pr = 0.5 * red - 0.418688 * green - 0.081312 * blue;
+    float Y = 0.299 * red + 0.587 * green + 0.114 * blue;
+    float Pb = - 0.168736 * red - 0.331264 * green + 0.5 * blue;
+    float Pr = 0.5 * red - 0.418688 * green - 0.081312 * blue;
+
+    cv_struct->Y = Y;
+    cv_struct->Pb = Pb;
+    cv_struct->Pr = Pr;
 
     *(y_pb_pr)elem = *cv_struct;
     free(cv_struct);
@@ -83,6 +110,7 @@ A2Methods_UArray2 cv_to_word(A2Methods_UArray2 cv_image,
 /* This function is the apply function for the cv_to_word function
  *     and executes all of the operations to calculate and store
  *     the elements of the abcdPbPr structs.
+ *     NEEDS WORK: could be split up into helper functions.
  */
 void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     void *elem, void *cl)
@@ -110,20 +138,23 @@ void apply_cv_to_word(int i, int j, A2Methods_UArray2 cv_image,
     avgPr = (float)((cv1->Pr + cv2->Pr + cv3->Pr + cv4->Pr) / 4.0);
 
     /* Convert a, b, c, d */
-    a_float = (cv4->Y + cv3->Y + cv2->Y + cv1->Y) / 4.0;
-    b_float = (cv4->Y + cv3->Y - cv2->Y - cv1->Y) / 4.0;
-    c_float = (cv4->Y - cv3->Y + cv2->Y - cv1->Y) / 4.0;
-    d_float = (cv4->Y - cv3->Y - cv2->Y + cv1->Y) / 4.0;
+    float Y1 = (float)cv1->Y;
+    float Y2 = (float)cv2->Y;
+    float Y3 = (float)cv3->Y;
+    float Y4 = (float)cv4->Y;
+    a_float = ((Y4 + Y3 + Y2 + Y1) / 4.0);
+    b_float = ((Y4 + Y3 - Y2 - Y1) / 4.0);
+    c_float = ((Y4 - Y3 + Y2 - Y1) / 4.0);
+    d_float = ((Y4 - Y3 - Y2 + Y1) / 4.0);
 
     /* b_float, c_float, and d_float must be between -0.3 and 0.3 */
-
     b_float = compressRange(b_float);
     c_float = compressRange(c_float);
     d_float = compressRange(d_float);
 
     /* Store quantized values in struct */
-    word_struct->Pb = (Arith40_index_of_chroma(avgPb));
-    word_struct->Pr = (Arith40_index_of_chroma(avgPr));
+    word_struct->Pb = (unsigned)(Arith40_index_of_chroma(avgPb));
+    word_struct->Pr = (unsigned)(Arith40_index_of_chroma(avgPr));
     word_struct->a = (unsigned)(roundf(a_float * A_COEF));
     word_struct->b = (signed)(roundf(b_float * BCD_COEF));
     word_struct->c = (signed)(roundf(c_float * BCD_COEF));
@@ -202,6 +233,10 @@ void apply_word_to_codeword(int i, int j,
 /* -------------------- Decompression Functions ----------------------*/
 /* -------------------------------------------------------------------*/
 
+/* This function takes in an array of codewords from a compressed
+ *     image and returns an array of unpacked words by mapping
+ *     through the array and calling the bitpack interface
+ */
 A2Methods_UArray2 codewords_to_words(A2Methods_UArray2 codewords,
     A2Methods_mapfun map, A2Methods_T methods)
 {
@@ -221,6 +256,10 @@ A2Methods_UArray2 codewords_to_words(A2Methods_UArray2 codewords,
     return cv_array;
 }
 
+/* This function is the apply function for the codewords_to_words
+ *     function. It calls Bitpack_getu and Bitpack_gets to unpack
+ *     the codewords of the array.
+ */
 void apply_codewords_to_words(int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
 {
@@ -241,6 +280,9 @@ void apply_codewords_to_words(int i, int j, A2Methods_UArray2 array,
 
 }
 
+/* This function takes in an array of words and returns an array of
+ *     cv structs (each of which stores Y, Pb, and Pr).
+ */
 A2Methods_UArray2 words_to_cv(A2Methods_UArray2 words_array,
     A2Methods_mapfun *map, A2Methods_T methods)
 {
@@ -260,7 +302,12 @@ A2Methods_UArray2 words_to_cv(A2Methods_UArray2 words_array,
 
 }
 
-
+/* This function is the apply function for the words_to_cv function.
+ *     It accesses the y_pb_pr struct at the current element and
+ *     performs operators to convert those values to abcdPbPr values.
+ *     by performing reverse cosine operations.
+ *     NEEDS WORK: could be split up into helper functions. 
+ */
 void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
 {
@@ -293,18 +340,21 @@ void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
     cv4->Pr = avgPr;
 
     /* Convert a, b, c, d values */
-    a = ((float)word_struct->a / A_COEF);
-    b = ((float)word_struct->b / BCD_COEF);
-    c = ((float)word_struct->c / BCD_COEF);
-    d = ((float)word_struct->d / BCD_COEF);
+    a = ((float)(word_struct->a) / A_COEF);
+    b = ((float)(word_struct->b) / BCD_COEF);
+    c = ((float)(word_struct->c) / BCD_COEF);
+    d = ((float)(word_struct->d) / BCD_COEF);
 
     /* Convert y values for each cv struct */
-    cv1->Y = decompressRange(a - b - c + d);
-    cv2->Y = decompressRange(a - b + c - d);
-    cv3->Y = decompressRange(a + b - c - d);
-    cv4->Y = decompressRange(a + b + c + d);
+    cv1->Y = (a - b - c + d);
+    cv2->Y = (a - b + c - d);
+    cv3->Y = (a + b - c - d);
+    cv4->Y = (a + b + c + d);
 }
 
+/* This function takes in a float as an argument and checks that its
+ *     value is between 0.0 and 1.0
+ */
 float decompressRange(float value)
 {
     if (value < 0) {
@@ -315,6 +365,9 @@ float decompressRange(float value)
     return value;
 }
 
+/* This function takes in an array of cv structs, calls a mapping
+ *     function, and then returns a new array of Pnm_rgb structs.
+ */
 Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
     A2Methods_mapfun *map, A2Methods_T methods)
 {
@@ -342,6 +395,11 @@ Pnm_ppm cv_to_rgb(A2Methods_UArray2 cv_array,
     return image;
 }
 
+/* This function is the apply function for the cv_to_rgb function.
+ *     It accesses the cv_struct struct for the current element of
+ *     the array and performs the math necessary to produce the
+ *     red, green, and blue unsigned values.
+ */
 void apply_cv_to_rgb(int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
 {
@@ -355,10 +413,8 @@ void apply_cv_to_rgb(int i, int j, A2Methods_UArray2 array,
     rgb_struct->red = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
         + 0.0 * (cv_struct->Pb) + 1.402 * (cv_struct->Pr)));
 
-
     rgb_struct->green = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
         - 0.344136 * (cv_struct->Pb) - 0.714136 * (cv_struct->Pr)));
-
 
     rgb_struct->blue = (float)(255 * decompressRange(1.0 * (cv_struct->Y)
         + 1.772 * (cv_struct->Pb) + 0.0 * (cv_struct->Pr)));

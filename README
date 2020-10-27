@@ -1,0 +1,47 @@
+/***********************************************************************
+*
+* Filename: README
+* By: Katherine Epifanio (Kepifa01) and Noah Wright (nwrigh05)
+* Date: 10/26/2020
+* Assignment: Homework 4
+*
+************************************************************************
+
+Architecture:
+
+	40image → compress40 → input_output → compress_decompress → bitpack
+
+	40image: takes a file from the command line or STDIN and passes
+    it on to compress40. Runs compress or decompress based on the users
+    specification.
+
+	compress40: handles both the compression and decompression of the
+    passed file. All helper functions called from compression_conversions
+    for both compression and decompression.
+
+    input_output: reads in input files for both compression and
+    decompression, and prints the resulting image to stdout.
+
+	compress_decompress: does all the computation behind both
+    compressing and decompressing the image. Hides the content of
+    bitpack from compression40
+
+	bitpack: holds all the bit wise functions used in
+    compression_conversion that actually pack and unpack the 32-bit word.
+
+Help Received:
+	Received help from 3 different TA’s
+
+Correctly Implemented:
+	To the best of our knowledge everything has been correctly implemented.
+        40image
+        compress40
+        input_output
+        compress_decompress
+        bitpack
+
+Time Spent Analyzing Problem:
+	~4 hours
+
+Time Spent Solving Problem:
+	~40 hours
