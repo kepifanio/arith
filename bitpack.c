@@ -184,7 +184,8 @@ int64_t Bitpack_gets(uint64_t word, unsigned width, unsigned lsb)
  *      represented in width amount of bits. Returns a new uint64_t with the
  *      repalced value.
  */
-uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned lsb, uint64_t value)
+uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned
+      lsb, uint64_t value)
 {
     assert(width <= 64);
     assert(width + lsb <= 64);
@@ -203,10 +204,11 @@ uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned lsb, uint64_t valu
  *      inputed int64_t value. Results in a checked runtime error if width is
  *      greater than the max number of bits in a uint64_t or if width + lsb is
  *      greater the max number of bits. Raises an exception if value can not be
- *      represented in width amount of bits. Returns a new uint64_t with the 
+ *      represented in width amount of bits. Returns a new uint64_t with the
  *      repalced value.
  */
-uint64_t Bitpack_news(uint64_t word, unsigned width, unsigned lsb,  int64_t value)
+uint64_t Bitpack_news(uint64_t word, unsigned width, unsigned lsb,
+      int64_t value)
 {
     assert(width <= 64);
     assert(width + lsb <= 64);

@@ -20,14 +20,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "compression_conversion.h"
+#include "compress_decompress.h"
 #include <assert.h>
 
 #define DENOM 255
-#define A_COEF 511
-#define BCD_COEF 50
-#define A_WIDTH 9
-#define BCD_WIDTH 5
+#define A_COEF 63
+#define BCD_COEF 103
+#define A_WIDTH 6
+#define BCD_WIDTH 6
 #define PBPR_WIDTH 4
 #define BCD_RANGE 0.3
 
@@ -222,7 +222,6 @@ void apply_word_to_codeword(int i, int j,
                                                         word_struct->b);
     temp = Bitpack_newu(temp, A_WIDTH, (2 * PBPR_WIDTH) + (3 * BCD_WIDTH),
                                                         word_struct->a);
-
     uint64_t *codeword = codeword_cl->methods->at
                         (codeword_cl->array, i, j);
     *codeword = temp;
@@ -306,7 +305,7 @@ A2Methods_UArray2 words_to_cv(A2Methods_UArray2 words_array,
  *     It accesses the y_pb_pr struct at the current element and
  *     performs operators to convert those values to abcdPbPr values.
  *     by performing reverse cosine operations.
- *     NEEDS WORK: could be split up into helper functions. 
+ *     NEEDS WORK: could be split up into helper functions.
  */
 void apply_words_to_cv (int i, int j, A2Methods_UArray2 array,
     void *elem, void *cl)
