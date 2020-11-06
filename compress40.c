@@ -6,7 +6,6 @@
 #include "a2plain.h"
 #include "assert.h"
 #include "input_output.h"
-#include "testing.h"
 #include "compress_decompress.h"
 
 void compress40(FILE *fp)
