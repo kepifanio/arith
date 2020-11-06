@@ -27,7 +27,7 @@ ppmdiff: ppmdiff.o a2plain.o uarray2.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 40image: 40image.o compress40.o uarray2.o a2plain.o input_output.o \
-		testing.o compress_decompress.o bitpack.o
+		compress_decompress.o bitpack.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:
