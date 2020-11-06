@@ -33,12 +33,18 @@ Help Received:
 	Received help from 3 different TA’s
 
 Correctly Implemented:
-	To the best of our knowledge everything has been correctly implemented.
+	To the best of our knowledge everything has been correctly
+      implemented.
         40image
         compress40
         input_output
         compress_decompress
         bitpack
+
+      After passing in an image to be compressed, and then passing
+      it back to be decompressed, we have an average difference
+      between the final outputted image and the original image of
+      1-2%.
 
 Time Spent Analyzing Problem:
 	~4 hours
