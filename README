@@ -7,9 +7,6 @@
 *
 ************************************************************************
 
-Assignment Purpose: 
-	Take a PPM image and compresses the image via lossy compression.
-
 Architecture:
 
 	40image → compress40 → input_output → compress_decompress → bitpack
