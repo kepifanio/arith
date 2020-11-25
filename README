@@ -6,6 +6,9 @@
 * Assignment: Homework 4
 *
 ************************************************************************
+Assignment Purpose:
+	Take a PPM image and compresses the image via lossy compression
+by packing and unpacking bits.  
 
 Architecture:
 
